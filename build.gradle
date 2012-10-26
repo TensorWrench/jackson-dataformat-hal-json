@@ -2,16 +2,9 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 
 group 'com.tensorwrench'
-// Tracks the jackson version it is built against
-version = '2.0.4'
 
 repositories {
-
-   ivy {
-   		 name "fileRepo"
-       url System.getenv("LOCAL_FILE_REPO") ?: '../ivy-repo'
-	     layout "maven"
-   }
+	mavenLocal()
 	mavenCentral()
 }
 
@@ -36,6 +29,6 @@ jar {
 
 uploadArchives {
     repositories {
-			add project.repositories.fileRepo
+			add project.repositories.mavenLocal()
     }
 }
