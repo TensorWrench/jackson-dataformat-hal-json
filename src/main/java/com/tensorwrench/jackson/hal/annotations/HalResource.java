@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
 @Target(ElementType.TYPE)
 @JacksonAnnotationsInside
 public @interface HalResource {
-	String format() default "{classname.lcase}/{id}";
-	String idParser() default ".*/(.*)\\??"; // after the last slash, but before any query params
+	public static final String DEFAULT_URL_FORMAT="{classname.lcase}/{id}";
+	public static final String DEFAULT_ID_REGEX=".*/([^?#]+).*";
+	
+	String urlFormat() default DEFAULT_URL_FORMAT;
+	String idRegex() default DEFAULT_ID_REGEX; // after the last slash, but before any query params
 }

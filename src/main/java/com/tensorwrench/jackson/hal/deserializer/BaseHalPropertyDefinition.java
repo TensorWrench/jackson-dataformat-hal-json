@@ -6,7 +6,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
@@ -17,6 +20,7 @@ import com.tensorwrench.jackson.hal.util.HalUtils;
 
 public abstract class BaseHalPropertyDefinition extends SettableBeanProperty {
 	private final Map<String,SettableBeanProperty> properties=new HashMap<>();
+	protected SettableBeanProperty selfProperty;
 
 	protected BaseHalPropertyDefinition(String propName) {
 		super(propName, TypeFactory.unknownType(), null, new AnnotationMap());
@@ -25,7 +29,10 @@ public abstract class BaseHalPropertyDefinition extends SettableBeanProperty {
 	public void addProp(SettableBeanProperty p) {
 		properties.put(p.getName(),p);
 	}
-
+	
+	public void setSelfProperty(SettableBeanProperty p) {
+		selfProperty=p;
+	}
 
 	//	@SuppressWarnings("unchecked")
 	@Override
@@ -72,12 +79,18 @@ public abstract class BaseHalPropertyDefinition extends SettableBeanProperty {
 		while(jp.nextToken() == JsonToken.FIELD_NAME) {
 			// while loop moves to the FieldName
 			jp.nextToken(); // this points to the value
-			SettableBeanProperty p=properties.get(jp.getCurrentName());
-			if(p !=null) {
-				Object value=deserializeProperty(jp, ctxt, p);
-				p.set(instance, value);
+			
+			// handle the self link
+			if("self".equals(jp.getCurrentName())) {
+				onSelfLink(jp,ctxt,instance);
 			} else {
-				skipValue(jp);
+				SettableBeanProperty p=properties.get(jp.getCurrentName());
+				if(p !=null) {
+					Object value=deserializeProperty(jp, ctxt, p);
+					p.set(instance, value);
+				} else {
+					skipValue(jp);
+				}
 			}
 		}
 		return null;
@@ -144,6 +157,10 @@ public abstract class BaseHalPropertyDefinition extends SettableBeanProperty {
 
 	protected Object onCollectionProperty(JsonParser jp, DeserializationContext ctxt, SettableBeanProperty p,Collection<Object> collection) throws JsonProcessingException,IOException {
 		throw new UnsupportedOperationException("Non-collection containers not supported: " + p);
+	}
+	
+	protected void onSelfLink(JsonParser jp, DeserializationContext ctxt,Object instance) throws JsonParseException, IOException {
+		throw new UnsupportedOperationException("Self link is only valid within a _link: " + jp);
 	}
 
 }

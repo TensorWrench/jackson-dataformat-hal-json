@@ -8,11 +8,13 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.tensorwrench.jackson.hal.Hal;
+import com.tensorwrench.jackson.hal.HalLinkCreator;
 
 public class LinkPropertyWriter extends BaseHalPropertyWriter {
-	
-	public LinkPropertyWriter() {
+	HalLinkCreator linkCreator;
+	public LinkPropertyWriter(HalLinkCreator linkCreator) {
 		super(Hal.LINKS);
+		this.linkCreator=linkCreator;
 	}
 
 	@Override
@@ -20,6 +22,7 @@ public class LinkPropertyWriter extends BaseHalPropertyWriter {
 		jgen.writeObjectFieldStart(getName());{  // "_links": {
 			jgen.writeFieldName("self");
 			writeOne(obj,jgen,prov);
+			
 			for(BeanPropertyWriter p: properties) {
 				jgen.writeFieldName(p.getName());
 				Object val=p.get(obj);
@@ -42,7 +45,7 @@ public class LinkPropertyWriter extends BaseHalPropertyWriter {
 		if(val ==null) {
 			jgen.writeNullField("href");
 		} else {
-			jgen.writeStringField("href",LinkBuilder.makeLink(val,prov));
+			jgen.writeStringField("href",linkCreator.makeLink(val,prov));
 		}
 		jgen.writeEndObject();
 	}

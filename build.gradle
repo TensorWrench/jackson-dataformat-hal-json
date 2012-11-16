@@ -17,7 +17,7 @@ dependencies {
 	compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion",
 	        "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
 
-	testCompile "junit:junit:$junitVersion"
+	testCompile  "org.testng:testng:6.8"
 }
 
 jar {
@@ -26,6 +26,7 @@ jar {
                    'Version': version
     }
 }
+test { useTestNG() }
 
 uploadArchives {
     repositories {

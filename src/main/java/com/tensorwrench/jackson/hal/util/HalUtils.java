@@ -1,12 +1,24 @@
 package com.tensorwrench.jackson.hal.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.tensorwrench.jackson.hal.annotations.HalId;
@@ -86,29 +98,17 @@ public class HalUtils {
 	public static String findFormat(final BeanDescription bean) {
 		final HalResource r=HalUtils.findAnnotation(bean.getBeanClass(),HalResource.class);
 		if(r!=null) {
-			return r.format();
-		} else {
-			try {
-				return HalResource.class.getMethod("format").getDefaultValue().toString();
-			} catch (NoSuchMethodException | SecurityException e) {
-				// meh, we tried...  fall through for hardcoded
-			}
-		}
-		return "{classname}/{id}";
+			return r.urlFormat();
+		} 
+		return HalResource.DEFAULT_URL_FORMAT;
 	}
 
 	public static String findIdParser(final BeanDescription bean) {
 		final HalResource r=HalUtils.findAnnotation(bean.getBeanClass(),HalResource.class);
 		if(r!=null) {
-			return r.idParser();
-		} else {
-			try {
-				return HalResource.class.getMethod("idParser").getDefaultValue().toString();
-			} catch (NoSuchMethodException | SecurityException e) {
-				// meh, we tried...  fall through for hardcoded
-			}
+			return r.idRegex();
 		}
-		return ".*/(.*)\\??"; // after the last slash, but before any query params
+		return HalResource.DEFAULT_ID_REGEX;
 	}
 
 	public static boolean isHalResource(final JavaType javaType) {
@@ -124,5 +124,31 @@ public class HalUtils {
 
 	public static boolean isHalLink(final BeanPropertyWriter p) {
 		return p.getAnnotation(HalLink.class)!=null;
+	}
+	
+	private final static Map<Class<?>,Class<?>> primitiveToBoxedClass = new HashMap<> ();
+	static {
+		primitiveToBoxedClass.put(boolean.class,Boolean.class);
+		primitiveToBoxedClass.put(byte.class, Byte.class);
+		primitiveToBoxedClass.put(short.class, Short.class);
+		primitiveToBoxedClass.put(char.class, Character.class);
+		primitiveToBoxedClass.put(int.class, Integer.class);
+		primitiveToBoxedClass.put(long.class, Long.class);
+		primitiveToBoxedClass.put(float.class, Float.class);
+		primitiveToBoxedClass.put(double.class, Double.class);
+	}
+	
+	public static Object valueFromString(final SettableBeanProperty p,String value) throws JsonMappingException {
+		try {
+			Class<?> c=p.getType().getRawClass();
+			if(primitiveToBoxedClass.containsKey(c)) {
+				c=primitiveToBoxedClass.get(c);
+			}
+			
+			Constructor<?> constructor = c.getConstructor(String.class);
+			return constructor.newInstance(value);
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			throw new JsonMappingException("Failed to convert id of "+value+" to " +p,e);
+		}
 	}
 }
