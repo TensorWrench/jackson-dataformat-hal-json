@@ -5,6 +5,6 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 public interface HalLinkResolver {
-	Object makeObject(String href, DeserializationContext ctxt, JavaType javaType) throws JsonMappingException;
-	String makeIdFromHref(Class<?> javaType, DeserializationContext ctxt, String href) throws JsonMappingException;
+	public Object makeObject(String href, JavaType javaType,DeserializationContext ctxt) throws JsonMappingException;
+	public String extractIdFromHref(String href, Class<?> resultClass,DeserializationContext ctxt) throws JsonMappingException;
 }

@@ -36,7 +36,7 @@ public class LinkPropertyDefinition extends BaseHalPropertyDefinition {
 
 	protected Object onNormalProperty(JsonParser jp, DeserializationContext ctxt, SettableBeanProperty p) throws JsonProcessingException, IOException {
 		String href=findHref(jp);
-		return linkResolver.makeObject(href,ctxt,p.getType());
+		return linkResolver.makeObject(href,p.getType(),ctxt);
 	};
 
 	@Override
@@ -45,7 +45,7 @@ public class LinkPropertyDefinition extends BaseHalPropertyDefinition {
 		if(selfProperty == null) {
 			throw new JsonMappingException("Class " + instance.getClass().getCanonicalName() + " does not contain a @HalId");
 		}
-		String idString=linkResolver.makeIdFromHref(instance.getClass(),ctxt,findHref(jp));
+		String idString=linkResolver.extractIdFromHref(findHref(jp),instance.getClass(),ctxt);
 		selfProperty.set(instance, HalUtils.valueFromString(selfProperty, idString));
 	}
 

@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.tensorwrench.jackson.hal.HalLinkResolver;
-import com.tensorwrench.jackson.hal.annotations.HalResource;
 import com.tensorwrench.jackson.hal.util.HalUtils;
 
 public class NewObjectLinkResolver implements HalLinkResolver{
@@ -52,26 +51,23 @@ public class NewObjectLinkResolver implements HalLinkResolver{
 		}
 	}
 	
+	/** Given a url and the expected type, return the actual object for that type.
+	 * 
+	 */
 	@Override
-	public Object makeObject(String href, DeserializationContext ctxt, JavaType javaType) throws JsonMappingException {
+	public Object makeObject(String href, JavaType javaType,DeserializationContext ctxt) throws JsonMappingException {
 		return findImpl(javaType,ctxt).make(href);
 	}
 	
+	
+	/** Accepts an href and pulls the object's ID out of it.  For example, if the ids are numbers, it should return "1234" with no params or other url bits.
+	 *   @param resultClass The class of the object that we're getting the ID for
+	 *   @param ctxt The deserialization context, in case it's needed
+	 *   @param href The href to pull the class from
+	 */
 	@Override
-	public String makeIdFromHref(Class<?> javaType,DeserializationContext ctxt,String href) throws JsonMappingException
+	public String extractIdFromHref(String href, Class<?> resultClass,DeserializationContext ctxt) throws JsonMappingException
 	{
-		HalResource resource=HalUtils.findAnnotation(javaType, HalResource.class);
-		Matcher m;
-		if(resource!=null) {
-			m=Pattern.compile(resource.idRegex()).matcher(href);
-		} else {
-			m=Pattern.compile(HalResource.DEFAULT_ID_REGEX).matcher(href);
-		}
-		
-		if(m.matches()) {
-			return m.group(1);
-		}
-		
-		throw new JsonMappingException("Could not turn " + href + " into an ID using pattern "+ m.pattern().toString());
+		return HalUtils.extractId(resultClass, href);
 	}
 }

@@ -30,9 +30,10 @@ public class HalLinkTest {
 		String id;
 		
 		public TestLinkResolver(Object obj, String id) 	{ this.obj = obj;	this.id = id;	}
-		@Override	public String makeIdFromHref(Class<?> javaType, DeserializationContext ctxt, String href) throws JsonMappingException
+		@Override	public String extractIdFromHref(String href, Class<?> resultClass, DeserializationContext ctxt) throws JsonMappingException
 		{ assertNotNull(id); return id; }
-		@Override public Object makeObject(String href, DeserializationContext ctxt, JavaType javaType) throws JsonMappingException
+		@Override
+		public Object makeObject(String href, JavaType javaType, DeserializationContext ctxt) throws JsonMappingException
 		{ assertNotNull(obj); return obj; }
 	}
 	

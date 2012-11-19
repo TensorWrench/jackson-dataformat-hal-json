@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.JavaType;
@@ -150,5 +152,20 @@ public class HalUtils {
 		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new JsonMappingException("Failed to convert id of "+value+" to " +p,e);
 		}
+	}
+	
+	public static String extractId(Class<?> c,String href) throws JsonMappingException {
+		HalResource resource=HalUtils.findAnnotation(c, HalResource.class);
+		Matcher m;
+		if(resource!=null) {
+			m=Pattern.compile(resource.idRegex()).matcher(href);
+		} else {
+			m=Pattern.compile(HalResource.DEFAULT_ID_REGEX).matcher(href);
+		}
+		
+		if(m.matches()) {
+			return m.group(1);
+		}
+		throw new JsonMappingException("Could not turn " + href + " into an ID using pattern "+ m.pattern().toString());
 	}
 }
